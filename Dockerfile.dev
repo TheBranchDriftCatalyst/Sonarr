@@ -1,0 +1,50 @@
+# Development Dockerfile for Sonarr with metrics
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS backend
+
+WORKDIR /src
+
+# Copy source
+COPY src/ ./src/
+COPY Logo/ ./Logo/
+COPY global.json ./
+
+# Build backend for linux-arm64 (for Apple Silicon Macs)
+RUN dotnet msbuild -restore src/Sonarr.sln \
+    -p:SelfContained=True \
+    -p:Configuration=Release \
+    -p:Platform=Posix \
+    -p:RuntimeIdentifiers=linux-arm64 \
+    -p:EnableAnalyzers=false \
+    -p:EnableWindowsTargeting=true \
+    -p:RunAnalyzers=false \
+    -p:RunAnalyzersDuringBuild=false \
+    -p:TreatWarningsAsErrors=false \
+    -t:PublishAllRids
+
+# Build frontend
+FROM node:20 AS frontend
+
+WORKDIR /app
+COPY package.json yarn.lock tsconfig.json .yarnrc ./
+RUN yarn install --frozen-lockfile
+
+COPY frontend/ ./frontend/
+RUN yarn build --env production
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+WORKDIR /app
+
+# Copy backend from build
+COPY --from=backend /src/_output/net8.0/linux-arm64/publish/ ./
+
+# Copy frontend
+COPY --from=frontend /app/_output/UI ./UI
+
+# Create data directory
+RUN mkdir -p /config
+
+EXPOSE 8989
+
+ENTRYPOINT ["./Sonarr", "--nobrowser", "--data=/config"]

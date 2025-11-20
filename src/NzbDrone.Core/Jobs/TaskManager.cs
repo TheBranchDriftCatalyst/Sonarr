@@ -12,6 +12,7 @@ using NzbDrone.Core.HealthCheck;
 using NzbDrone.Core.Housekeeping;
 using NzbDrone.Core.ImportLists;
 using NzbDrone.Core.Indexers;
+using NzbDrone.Core.Instrumentation.Metrics;
 using NzbDrone.Core.Lifecycle;
 using NzbDrone.Core.MediaFiles.Commands;
 using NzbDrone.Core.Messaging.Commands;
@@ -131,6 +132,12 @@ namespace NzbDrone.Core.Jobs
                     {
                         Interval = GetRssSyncInterval(),
                         TypeName = typeof(RssSyncCommand).FullName
+                    },
+
+                    new ScheduledTask
+                    {
+                        Interval = GetMetricsUpdateInterval(),
+                        TypeName = typeof(UpdateMetricsCommand).FullName
                     }
                 };
 
@@ -197,6 +204,30 @@ namespace NzbDrone.Core.Jobs
             }
 
             return interval;
+        }
+
+        private int GetMetricsUpdateInterval()
+        {
+            var envValue = Environment.GetEnvironmentVariable("SONARR_METRICS_UPDATE_INTERVAL");
+
+            if (int.TryParse(envValue, out var interval) && interval > 0)
+            {
+                // Cap at reasonable values (1 minute to 60 minutes)
+                if (interval < 1)
+                {
+                    return 1;
+                }
+
+                if (interval > 60)
+                {
+                    return 60;
+                }
+
+                return interval;
+            }
+
+            // Default to 5 minutes
+            return 5;
         }
 
         public void Handle(CommandExecutedEvent message)

@@ -18,6 +18,7 @@ using NLog.Extensions.Logging;
 using NzbDrone.Common.EnvironmentInfo;
 using NzbDrone.Common.Instrumentation;
 using NzbDrone.Common.Processes;
+using Prometheus;
 using NzbDrone.Common.Serializer;
 using NzbDrone.Core.Configuration;
 using NzbDrone.Core.Datastore;
@@ -335,6 +336,7 @@ namespace NzbDrone.Host
             app.UseEndpoints(x =>
             {
                 x.MapHub<MessageHub>("/signalr/messages").RequireAuthorization("SignalR");
+                x.MapMetrics("/metrics").AllowAnonymous();  // Prometheus metrics endpoint
                 x.MapControllers();
             });
         }

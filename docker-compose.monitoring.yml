@@ -1,0 +1,88 @@
+services:
+  sonarr:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: sonarr
+    environment:
+      - TZ=America/Los_Angeles
+      - SONARR_METRICS_UPDATE_INTERVAL=1
+    volumes:
+      - sonarr_config:/config
+      - media_data:/media
+      - downloads:/downloads
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    depends_on:
+      - sabnzbd
+    networks:
+      - monitoring
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - sabnzbd_config:/config
+      - downloads:/downloads
+      - media_data:/media
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  sonarr_config:
+  sabnzbd_config:
+  downloads:
+  media_data:

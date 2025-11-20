@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="8.0.12" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="Polly" Version="8.5.2" />
+    <PackageReference Include="prometheus-net" Version="8.2.1" />
     <PackageReference Include="Servarr.FFMpegCore" Version="4.7.0-26" />
     <PackageReference Include="Servarr.FFprobe" Version="5.1.4.112" />
     <PackageReference Include="StyleCop.Analyzers.Unstable" Version="1.2.0.556">

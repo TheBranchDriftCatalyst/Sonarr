@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version:*)",
+      "WebSearch",
+      "Bash(dotnet add:*)",
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(docker-compose:*)",
+      "Bash(curl:*)",
+      "Bash(docker volume rm:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker restart:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

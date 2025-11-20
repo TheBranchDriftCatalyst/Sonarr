@@ -1,3 +1,4 @@
 {
-  "typescript.tsdk": "node_modules\\typescript\\lib"
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "idf.pythonInstallPath": "/Users/panda/.local/share/mise/installs/python/3.12.6/bin/python"
 }
